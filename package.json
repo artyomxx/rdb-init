@@ -1,0 +1,25 @@
+{
+  "name": "rdb-init",
+  "version": "0.0.1",
+  "description": "RethinkDB initializer",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lolwhoami/rdb-init.git"
+  },
+  "keywords": [
+    "node",
+    "js",
+    "rethinkdb",
+    "rdb"
+  ],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/lolwhoami/rdb-init/issues"
+  },
+  "homepage": "https://github.com/lolwhoami/rdb-init#readme"
+}
