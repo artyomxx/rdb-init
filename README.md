@@ -1,0 +1,2 @@
+# rdb-init
+RethinkDB initializer
