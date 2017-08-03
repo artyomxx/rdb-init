@@ -1,5 +1,5 @@
 # rdb-init
-RethinkDB initializer with
+RethinkDB initializer
 
 Inspired by https://github.com/thejsj/rethinkdb-init
 
