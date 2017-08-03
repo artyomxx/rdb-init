@@ -1,8 +1,11 @@
 'use strict';
 
-module.exports = (r, stateFilePath) => {
+module.exports = (r, stateFilePath, options) => {
 	const st = require('./state')(stateFilePath),
 		pick = (obj, fields) => fields.reduce((o, f) => obj[f] ? Object.assign(o, {[f]: obj[f]}) : o, {});
+
+	options = Object.assign({debug: true}, options);
+	const debug = options.debug ? (...args) => console.log.apply(console, args) : (...args) => args;
 
 	if(typeof r !== 'function')
 		throw new TypeError(`r must be a RethinkDB instance. Passed instances is a '${typeof r}'`);
@@ -40,14 +43,14 @@ module.exports = (r, stateFilePath) => {
 			st.get(db, table)
 			.then(state => {
 				if(state)
-					return resolve(console.log(`table ${db}.${table.name || table} already exists`));
+					return resolve(debug(`table ${db}.${table.name || table} already exists`));
 
 				if(typeof table === 'string')
 					r.db(db).tableCreate(table).run(conn)
 					.catch(existsHandler)
 					.then(() =>
 						st.add(db, table)
-						.then(() => resolve(console.log(`created table ${db}.${table}`)))
+						.then(() => resolve(debug(`created table ${db}.${table}`)))
 						.catch(() => { throw new Error(`Couldn't add created table ${db}.${table} to the state file`); })
 					);
 				else
@@ -60,10 +63,10 @@ module.exports = (r, stateFilePath) => {
 						.then(() => {
 							if(table.indexes && table.indexes.length)
 								createIndexes(table, db, conn)
-								.then(() => resolve(console.log(`created table ${db}.${table.name} with ${table.indexes.length} indexes`)))
-								.catch(() => resolve(console.log(`created table ${db}.${table.name}, couldn't create ${table.indexes.length} indexes`)));
+								.then(() => resolve(debug(`created table ${db}.${table.name} with ${table.indexes.length} indexes`)))
+								.catch(() => resolve(debug(`created table ${db}.${table.name}, couldn't create ${table.indexes.length} indexes`)));
 							else
-								resolve(console.log(`created table ${db}.${table.name}`));
+								resolve(debug(`created table ${db}.${table.name}`));
 						})
 					);
 			})
