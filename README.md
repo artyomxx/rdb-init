@@ -4,8 +4,7 @@ RethinkDB initializer
 Inspired by https://github.com/thejsj/rethinkdb-init
 
 Uses the same schema structure.
-
-Saves db structure into .json file, so you'll not get these crazy duplicate tables and indexes.
+Tries to ensure that no duplicate tables or databases are created.
 
 Install: `npm i --save rdb-init`
 
