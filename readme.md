@@ -1,7 +1,7 @@
 # rdb-init
 RethinkDB initializer
 
-Inspired by (https://github.com/thejsj/rethinkdb-init)[rethinkdb-init]
+Inspired by [rethinkdb-init](https://github.com/thejsj/rethinkdb-init)
 
 Uses the same schema structure.
 Tries to ensure that no duplicate tables or databases are created. When conflicts are detected, this module tries to fix them: rename, transfer data, delete empty tables/dbs, etc — check the code to get the idea. It isn't perfect at the moment, but seems to be working.
