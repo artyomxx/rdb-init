@@ -39,7 +39,7 @@ module.exports = (r, options) => {
 			let res = await createTables(conn, conn.db, schema);
 			debug('Initialized tables', res);
 			await lock.unset(conn.db);
-			return res;
+			return conn;
 		}
 		catch(error) {
 			await lock.unset(conn.db);
