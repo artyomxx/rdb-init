@@ -1,14 +1,59 @@
 'use strict';
 
 module.exports = (r, options) => {
-	const pick = (obj, fields) => fields.reduce((o, f) => obj[f] ? Object.assign(o, {[f]: obj[f]}) : o, {});
-	const lock = require('./lock');
-
-	options = Object.assign({debug: true}, options);
-	const debug = options.debug ? (...args) => console.log.apply(console, args) : (...args) => args;
-
 	if(typeof r !== 'function')
 		throw new TypeError(`r must be a RethinkDB instance. Passed instances is a '${typeof r}'`);
+
+	r.init = async (connection, schema) => {
+		if(typeof connection.db !== 'string')
+			throw new TypeError('Connection is not an object or doesn`t have a db property.');
+
+		if(!Array.isArray(schema))
+			throw new TypeError('Schema must be an array.');
+
+		var conn = null;
+
+		try {
+			conn = await r.connect(connection);
+			await lock.set(conn.db);
+		}
+		catch(error) {
+			await lock.unset(conn.db);
+			let m = 'Cannot establish connection';
+			console.error(m, error);
+			throw new Error(m);
+		}
+
+		try {
+			await createDB(conn, conn.db);
+			await checkDuplicateDBs(conn);
+		}
+		catch(error) {
+			await lock.unset(conn.db);
+			let m = 'Could not initialize DB';
+			console.error(m, error);
+			throw new Error(m);
+		}
+
+		try {
+			let res = await createTables(conn, conn.db, schema);
+			debug('Initialized tables', res);
+			await lock.unset(conn.db);
+			return res;
+		}
+		catch(error) {
+			await lock.unset(conn.db);
+			let m = 'Could not create tables';
+			console.error(m, error);
+			throw new Error(m);
+		}
+	};
+
+	options = Object.assign({debug: true}, options);
+
+	const lock = require('./lock');
+	const pick = (obj, fields) => fields.reduce((o, f) => obj[f] ? Object.assign(o, {[f]: obj[f]}) : o, {});
+	const debug = options.debug ? (...args) => console.log.apply(console, args) : (...args) => args;
 
 	const dropTable = (conn, db, table) => r.db(db).tableDrop(table).run(conn);
 	const dropDB = (conn, db) => r.dbDrop(db).run(conn);
@@ -387,50 +432,6 @@ module.exports = (r, options) => {
 
 	const createTables = (conn, db, tables) =>
 		Promise.all(tables.map(table =>	createTable(conn, db, table)));
-
-	r.init = async (connection, schema) => {
-		if(typeof connection.db !== 'string')
-			throw new TypeError('Connection is not an object or doesn`t have a db property.');
-
-		if(!Array.isArray(schema))
-			throw new TypeError('Schema must be an array.');
-
-		var conn = null;
-		try {
-			conn = await r.connect(connection);
-			await lock.set(conn.db);
-		}
-		catch(error) {
-			await lock.unset(conn.db);
-			let m = 'Cannot establish connection';
-			console.error(m, error);
-			throw new Error(m);
-		}
-
-		try {
-			await createDB(conn, conn.db);
-			await checkDuplicateDBs(conn);
-		}
-		catch(error) {
-			await lock.unset(conn.db);
-			let m = 'Could not initialize DB';
-			console.error(m, error);
-			throw new Error(m);
-		}
-
-		try {
-			let res = await createTables(conn, conn.db, schema);
-			debug('Initialized tables', res);
-			await lock.unset(conn.db);
-			return res;
-		}
-		catch(error) {
-			await lock.unset(conn.db);
-			let m = 'Could not create tables';
-			console.error(m, error);
-			throw new Error(m);
-		}
-	};
 
 	return r.init;
 };
