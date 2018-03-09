@@ -15,13 +15,17 @@ module.exports = (r, options) => {
 
 		try {
 			conn = await r.connect(connection);
+
+			if(!conn || !conn.db)
+				throw new Error('DB is not accessible');
+
 			await lock.set(conn.db);
 		}
 		catch(error) {
-			await lock.unset(conn.db);
-			let m = 'Cannot establish connection';
-			console.error(m, error);
-			throw new Error(m);
+			if(conn && conn.db)
+				await lock.unset(conn.db);
+
+			throw new Error(error.message);
 		}
 
 		try {
